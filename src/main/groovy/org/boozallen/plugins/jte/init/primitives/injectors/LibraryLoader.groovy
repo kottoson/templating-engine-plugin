@@ -80,6 +80,7 @@ import org.jenkinsci.plugins.workflow.job.WorkflowJob
             def stepWrapper = LibraryLoader.getPrimitiveClass()
             binding.setVariable(stepName, stepWrapper.createDefaultStep(script, stepName, stepConfig))
         }
+        println "DEBUG: Finished Injecting Libraries"
     }
 
     static void doPostInject(FlowExecutionOwner flowOwner, PipelineConfigurationObject config, Binding binding){

@@ -95,8 +95,9 @@ class StepWrapper extends TemplatePrimitive implements Serializable{
         }
     }
 
+    @NonCPS
     void throwPreLockException(){
-        throw new TemplateException ("Library Step Collision. The step ${name} already defined via the ${library} library.")
+        throw new TemplateException ("Library Step Collision. The step ${name} is already defined via the ${library} library.")
     }
 
     void throwPostLockException(){

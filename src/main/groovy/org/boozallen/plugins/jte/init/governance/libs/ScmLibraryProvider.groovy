@@ -33,6 +33,7 @@ import hudson.util.ListBoxModel
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 import jenkins.model.Jenkins
 import org.jenkinsci.plugins.workflow.flow.FlowExecutionOwner
+import org.boozallen.plugins.jte.init.primitives.TemplateException
 
 public class ScmLibraryProvider extends LibraryProvider{
 
@@ -98,23 +99,28 @@ public class ScmLibraryProvider extends LibraryProvider{
             !it.getName().endsWith("library_config.groovy") // exclude lib config file
         }.each{ stepFile ->
           def s = StepWrapper.createFromFile(stepFile, libName, binding, libConfig)
-          libNamespace.put(s.getName(), s)
-          try{
-            binding.setVariable(s.getName(), s)
-          } catch(TemplateException e) {
-            //The only diff. between a PreLock and a PostLock Exception is the message
-            if (e.getMessage() =~ /Library Step Collision. The step/){ //if PreLock
-              logger.printWarning(e.getMessage())
-              logger.printWarning("${s.getName()} from ${libName} can still be called as ${libName}.${s.getName()}")
-            } else{
-              throw e
+          if (s.getName() != libName) { //avoids name collisions between steps & namespaces
+            try{
+              binding.setVariable(s.getName(), s)
+            } catch(TemplateException e) {
+              //The only diff. between a PreLock and a PostLock Exception is the message
+              if (e.getMessage() =~ /Library Step Collision. The step/){ //if PreLock
+                logger.printWarning(e.getMessage())
+                logger.printWarning("${s.getName()} from ${libName} can still be called as ${libName}.${s.getName()}")
+              } else{
+                throw e
+              }
             }
+          } else {
+            libNamespace.put("call", s) 
+            libNamespace.put(s.getName(), s)
           }
         }
 
         // add the namespace to the binding
         binding.setVariable(libName, libNamespace)
         
+        logger.printWarning("DEBUG: library ${libName} loaded")
         return libConfigErrors
     }
 
